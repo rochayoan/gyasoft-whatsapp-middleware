@@ -1,7 +1,7 @@
 # Gyasoft WhatsApp Middleware
 
 Middleware privado de Smarky que permite al sistema de Gyasoft enviar
-**únicamente las 3 plantillas de WhatsApp aprobadas** a través de Kapso.
+**únicamente las 6 plantillas de WhatsApp aprobadas** a través de Kapso.
 
 Es una capa deliberadamente estrecha: no expone el Inbox, no permite consultar
 conversaciones, contactos ni mensajes, y no acepta texto libre. El cliente sólo
@@ -54,7 +54,7 @@ no indica cuál variable falta ni devuelve ningún valor.
 
 ### `POST /api/gyasoft/send-template`
 
-Envía una de las 3 plantillas autorizadas.
+Envía una de las 6 plantillas autorizadas.
 
 **Headers**
 
@@ -67,7 +67,7 @@ Content-Type: application/json
 
 | Campo | Tipo | Descripción |
 | --- | --- | --- |
-| `tipo` | string | Uno de los 3 tipos permitidos (ver abajo). |
+| `tipo` | string | Uno de los 6 tipos permitidos (ver abajo). |
 | `telefono` | string | Número del destinatario. |
 | `datos` | object | Variables de la plantilla. |
 | `id_operacion` | string | Identificador de la operación, definido por Gyasoft. |
@@ -91,11 +91,26 @@ Se eliminan espacios, guiones, paréntesis y `+`. Luego:
 | `aviso_de_deuda` | `cumbre_aviso_de_deuda` | `es` | `nombre`, `servicio`, `codigo` |
 | `recordatorio_de_corte` | `cumbre_recordatorio_de_corte` | `es` | `nombre`, `servicio`, `codigo` |
 | `pago_realizado` | `cumbre_pago_realizado` | `es` | `nombre`, `detalle`, `servicio`, `descuento`, `comprobante` |
+| `aviso_de_deuda_enlace` | `aviso_de_deuda` | `es` | `nombre`, `servicio`, `enlace_pago` |
+| `recordatorio_de_corte_enlace` | `recordatorio_de_corte` | `es` | `nombre`, `servicio`, `enlace_pago` |
+| `detalle_de_pago` | `detalle_de_pago` | `es` | `nombre`, `detalle`, `servicio`, `descuento`, `comprobante` |
 
 Todas las variables son obligatorias, deben ser string o número, y no pueden
 quedar vacías. No pueden contener saltos de línea, retornos de carro ni
 tabulaciones (Meta rechaza esos parámetros); si los contienen, la respuesta es
 `400`. El orden de la tabla es el orden en que se envían a Meta.
+
+> **`enlace_pago` es una variable de texto del BODY, no un botón dinámico.** Se
+> envía como un `parameter` de tipo `text` más, igual que `nombre` o `servicio`.
+> Las plantillas no llevan header, imagen, documento, vídeo ni botones: el
+> payload hacia Kapso contiene únicamente el componente `body`.
+
+Ojo con los nombres: el `tipo` lógico `aviso_de_deuda_enlace` corresponde a la
+plantilla real `aviso_de_deuda`, mientras que el `tipo` `aviso_de_deuda`
+corresponde a `cumbre_aviso_de_deuda`. Lo mismo ocurre con
+`recordatorio_de_corte_enlace` → `recordatorio_de_corte`. Son plantillas
+distintas en Meta; el `tipo` que se envía en la petición es el de la primera
+columna.
 
 ### Payload de cada tipo
 
@@ -140,6 +155,50 @@ tabulaciones (Meta rechaza esos parámetros); si los contienen, la respuesta es
     "comprobante": "NUMERO DE COMPROBANTE"
   },
   "id_operacion": "pago-<codigo>-<periodo>"
+}
+```
+
+```jsonc
+// aviso_de_deuda_enlace
+{
+  "tipo": "aviso_de_deuda_enlace",
+  "telefono": "70000000",
+  "datos": {
+    "nombre": "NOMBRE DEL CLIENTE",
+    "servicio": "DESCRIPCION DEL SERVICIO",
+    "enlace_pago": "https://EJEMPLO/veripagos/cliente?cod_cliente=<codigo>"
+  },
+  "id_operacion": "aviso-deuda-enlace-<codigo>-<periodo>"
+}
+```
+
+```jsonc
+// recordatorio_de_corte_enlace
+{
+  "tipo": "recordatorio_de_corte_enlace",
+  "telefono": "70000000",
+  "datos": {
+    "nombre": "NOMBRE DEL CLIENTE",
+    "servicio": "DESCRIPCION DEL SERVICIO",
+    "enlace_pago": "https://EJEMPLO/veripagos/cliente?cod_cliente=<codigo>"
+  },
+  "id_operacion": "recordatorio-corte-enlace-<codigo>-<periodo>"
+}
+```
+
+```jsonc
+// detalle_de_pago
+{
+  "tipo": "detalle_de_pago",
+  "telefono": "70000000",
+  "datos": {
+    "nombre": "NOMBRE DEL CLIENTE",
+    "detalle": "PERIODO DEL PAGO",
+    "servicio": "DESCRIPCION DEL SERVICIO",
+    "descuento": "MONTO DE DESCUENTO",
+    "comprobante": "NUMERO DE COMPROBANTE"
+  },
+  "id_operacion": "detalle-pago-<comprobante>-<periodo>"
 }
 ```
 

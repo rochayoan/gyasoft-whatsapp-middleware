@@ -8,7 +8,10 @@
 export type TemplateKey =
   | "aviso_de_deuda"
   | "recordatorio_de_corte"
-  | "pago_realizado";
+  | "pago_realizado"
+  | "aviso_de_deuda_enlace"
+  | "recordatorio_de_corte_enlace"
+  | "detalle_de_pago";
 
 export type TemplateDefinition = {
   /** Nombre real de la plantilla aprobada en Meta/Kapso. */
@@ -31,6 +34,21 @@ export const TEMPLATES: Readonly<Record<TemplateKey, TemplateDefinition>> = {
   },
   pago_realizado: {
     name: "cumbre_pago_realizado",
+    language: "es",
+    variables: ["nombre", "detalle", "servicio", "descuento", "comprobante"],
+  },
+  aviso_de_deuda_enlace: {
+    name: "aviso_de_deuda",
+    language: "es",
+    variables: ["nombre", "servicio", "enlace_pago"],
+  },
+  recordatorio_de_corte_enlace: {
+    name: "recordatorio_de_corte",
+    language: "es",
+    variables: ["nombre", "servicio", "enlace_pago"],
+  },
+  detalle_de_pago: {
+    name: "detalle_de_pago",
     language: "es",
     variables: ["nombre", "detalle", "servicio", "descuento", "comprobante"],
   },
